@@ -16,7 +16,8 @@ First, here is the modified [config.yml](https://github.com/autorope/donkeypart_
 
 device_search_term: 'xbox'
 
-#Map the button event index to the button names
+
+#Map the button codes to the button names
 
 button_map:
 
@@ -24,32 +25,33 @@ button_map:
   0x01: 'LEFT_STICK_Y'
   0x02: 'RIGHT_STICK_X'
   0x05: 'RIGHT_STICK_Y'
-
   #right trigger
   0x09: 'RIGHT_BOTTOM_TRIGGER'
   #left trigger
   0x0a: 'LEFT_BOTTOM_TRIGGER'
   #all button pressed
   0x04: 'BUTTON'
-  #D-PAD LEFT -1, D-PAD RIGHT  1, D-PAD Center 0  
+  
+  #D-PAD LEFT -0.00078125, D-PAD RIGHT  0.0078125  
   0x10: 'PAD_RIGHT_LEFT'
-  #D-PAD UP -1, D-PAD DOWN 1, D-Pad Center 0
+  #D-PAD UP -0.0078125, D-PAD DOWN 0.0078125
   0x11: 'PAD_UP_DOWN'
 
-  #'LEFT_TOP_TRIGGER' #left shoulder 589829
-  #'RIGHT_TOP_TRIGGER' #right shoulder 589830
-  #'SELECT' # no such button on xbox, use button A instead
-  #'BACK' #589831
-  #'START' # 589832
-  #'LEFT_STICK_PRESS' #589833
-  #'RIGHT_STICK_PRESS' #589834
-  #'A' #589825
-  #'B' #589826
-  #'X' #589827
-  #'Y' #589828
-  #'Xbox' #786979
+  # 'LEFT_TOP_TRIGGER' #left shoulder 589829
+  # 'RIGHT_TOP_TRIGGER' #right shoulder 589830
+  # 'SELECT' # no such button on xbox, use button A instead
+  # 'BACK' #589831
+  # 'START' # 589832
+  # 'LEFT_STICK_PRESS' #589833
+  # 'RIGHT_STICK_PRESS' #589834
+  # 'A' #589825
+  # 'B' #589826
+  # 'X' #589827
+  # 'Y' #589828
+  # 'Xbox' #786979
 
-joystic_max_value: 32768
+joystic_max_value: 65535
+# joystic_max_value: 1280
 ```
 
 **part.py:** major modification for Xbox One Bluetooth controller is as below,
