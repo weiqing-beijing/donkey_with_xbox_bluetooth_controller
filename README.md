@@ -1,59 +1,121 @@
-# donkeycar: a python self driving library
+# To Train Donkeycar With Xbox One Bluetooth Controller
 
-[![Build Status](https://travis-ci.org/autorope/donkeycar.svg?branch=dev)](https://travis-ci.org/autorope/donkeycar)
-[![CodeCov](https://codecov.io/gh/autoropoe/donkeycar/branch/dev/graph/badge.svg)](https://codecov.io/gh/autorope/donkeycar/branch/dev)
-[![PyPI version](https://badge.fury.io/py/donkeycar.svg)](https://badge.fury.io/py/donkeycar)
-[![Py versions](https://img.shields.io/pypi/pyversions/donkeycar.svg)](https://img.shields.io/pypi/pyversions/donkeycar.svg)
+[**(中文)**](./README_CN.md)
 
-Donkeycar is minimalist and modular self driving library for Python. It is
-developed for hobbyists and students with a focus on allowing fast experimentation and easy
-community contributions.
+[Donkeycar](https://github.com/autorope/donkey2) is a minimalist version of autonomous driving platform using machine learning capability to auto-drive a RC transportation vehicle. It is designed to control a RC car but could be extended into other type of transportation control applications.
 
-#### Quick Links
-* [Donkeycar Updates & Examples](http://donkeycar.com)
-* [Build instructions and Software documentation](http://docs.donkeycar.com)
-* [Slack / Chat](https://donkey-slackin.herokuapp.com/)
+The original development of the training is based on a web control mechanism and then a [bluetooth controller](https://github.com/autorope/donkeypart_bluetooth_game_controller) "part" was developed. The official 'part' from the donkeycar repository is designed for Nintendo Wiiu controller as default while I have already got an Xbox One bluetooth controller. So to develop an Xbox controller version of the part became a natual decison.
 
-![donkeycar](./docs/assets/build_hardware/donkey2.PNG)
+It turned out not an easy task as the command structure of the Xbox One controller is very much different from the command structure commonly used with Wiiu or PS3/4. My friend Chris as a passionate maker was able to crack the code and make the Donkeycar trained successfully with a Xbox One controller and offered his code for me to use. As I plan to build more controller-enabled robots in future I decided to do my own homework thjis time to understand the details of an Xbox One Bluetooth Controller's command structure and how to make it work with an Linux-based SOC board like Raspberry Pi or BeagleBone. Here is the step by step process and the learning with a few important tricks to get it work.
 
-#### Use Donkey if you want to:
-* Make an RC car drive its self.
-* Compete in self driving races like [DIY Robocars](http://diyrobocars.com)
-* Experiment with autopilots, mapping computer vision and neural networks.
-* Log sensor data. (images, user inputs, sensor readings)
-* Drive your car via a web or game controller.
-* Leverage community contributed driving data.
-* Use existing CAD models for design upgrades.
+First, here is the modified [config.yml](https://github.com/autorope/donkeypart_bluetooth_game_controller) file used in donkeycar project based on the data collected from Xbox One Bluetooth controller as an input device on Raspberry Pi 3:
 
-### Get driving.
-After building a Donkey2 you can turn on your car and go to http://localhost:8887 to drive.
+**xbox_config.yml:**
 
-### Modify your cars behavior.
-The donkey car is controlled by running a sequence of events
+```yml
 
-```python
-#Define a vehicle to take and record pictures 10 times per second.
+device_search_term: 'xbox'
 
-from donkeycar import Vehicle
-from donkeycar.parts.camera import PiCamera
-from donkeycar.parts.datastore import Tub
+#Map the button event index to the button names
 
+button_map:
 
-V = Vehicle()
+  0x00: 'LEFT_STICK_X'
+  0x01: 'LEFT_STICK_Y'
+  0x02: 'RIGHT_STICK_X'
+  0x05: 'RIGHT_STICK_Y'
 
-#add a camera part
-cam = PiCamera()
-V.add(cam, outputs=['image'], threaded=True)
+  #right trigger
+  0x09: 'RIGHT_BOTTOM_TRIGGER'
+  #left trigger
+  0x0a: 'LEFT_BOTTOM_TRIGGER'
+  #all button pressed
+  0x04: 'BUTTON'
+  #D-PAD LEFT -1, D-PAD RIGHT  1, D-PAD Center 0  
+  0x10: 'PAD_RIGHT_LEFT'
+  #D-PAD UP -1, D-PAD DOWN 1, D-Pad Center 0
+  0x11: 'PAD_UP_DOWN'
 
-#add tub part to record images
-tub = Tub(path='~/mycar/get_started',
-          inputs=['image'],
-          types=['image_array'])
-V.add(tub, inputs=['image'])
+  #'LEFT_TOP_TRIGGER' #left shoulder 589829
+  #'RIGHT_TOP_TRIGGER' #right shoulder 589830
+  #'SELECT' # no such button on xbox, use button A instead
+  #'BACK' #589831
+  #'START' # 589832
+  #'LEFT_STICK_PRESS' #589833
+  #'RIGHT_STICK_PRESS' #589834
+  #'A' #589825
+  #'B' #589826
+  #'X' #589827
+  #'Y' #589828
+  #'Xbox' #786979
 
-#start the drive loop at 10 Hz
-V.start(rate_hz=10)
+joystic_max_value: 32768
 ```
 
-See [home page](http://donkeycar.com), [docs](http://docs.donkeycar.com)
-or join the [Slack channel](http://www.donkeycar.com/community.html) to learn more.
+**part.py:** major modification for Xbox One Bluetooth controller is as below,
+
+```python
+            '''
+            Adding customized button:value dictionary for xbox one bluetooth controller
+            as it provide one constant button event index of '0x04' for all button pressing event and use value to differentiate the button type. This 'button:value' is collected with the built-in tool from Donkeycar bluetooth controller part. 
+            '''
+
+            # if BUTTON
+            evt_pressing_btn_map = {
+                589829: 'LEFT_TOP_TRIGGER',
+                589830: 'RIGHT_TOP_TRIGGER',
+                589831: 'BACK',
+                589832: 'START',
+                589833: 'LEFT_STICK_PRESS',
+                589834: 'RIGHT_STICK_PRESS',
+                589825: 'A',
+                589826: 'B',
+                589827: 'X',
+                589828: 'Y',
+                786979: 'XBOX'
+            }
+
+            # if PAD_RIGHT_LEFT
+            evt_pressing_pad_l_r_map = {
+                1: 'PAD_RIGHT',
+                -1: 'PAD_LEFT'
+            }
+
+            # if PAD_UP_DOWN
+            evt_pressing_pad_u_d_map = {
+                1: 'PAD_DOWN',
+                -1: 'PAD_UP'
+            }
+
+            if btn == 'BUTTON':
+                btn = evt_pressing_btn_map.get(val, 'UNDEFINED')
+                return btn, val
+            
+            if btn == 'PAD_UP_DOWN':
+                btn = evt_pressing_pad_u_d_map.get(val, 'CENTER')
+                return btn, val
+
+            if btn == 'PAD_RIGHT_LEFT':
+                btn = evt_pressing_pad_l_r_map.get(val, 'CENTER')
+                return btn, val
+
+            '''
+            The axis output value format of xbox one bluetooth controller is different from Wiiu or PS3/4.
+            The value range is between 0-65535 for the Left and Right Stick movement and 0-1023 for the Left and Right Bottom Triggers.
+            '''	
+            
+            if btn == 'LEFT_BOTTOM_TRIGGER' or btn == 'RIGHT_BOTTOM_TRIGGER':
+                val = float(val/1023)
+                return btn, val
+            else:
+                val = float(val-32767)/32768
+            return btn, val
+```
+
+Just clone the original Bluetooth Controller repo and replaced the part.py with the modified version from this repo and copy the xbox_config.yml file into the [donkeypart_bluetooth_game_controller/donkeypart_bluetooth_game_controller/](https://github.com/autorope/donkeypart_bluetooth_game_controller/tree/master/donkeypart_bluetooth_game_controller). Don't need to delete the config file for Wiiu as I have change the config file look-up setup in part.py to the new xbox_config.yml file already.
+
+Now you need to get your Xbox One Bluetooth controller connected with Raspberry Pi which is another challenge. The instruction to come. 
+
+After all this hassles, you can finally start to use Xbox One Bluetooth controller just as Wiiu or PS3/4 in your Donkeycar project.
+
+Have fun!
