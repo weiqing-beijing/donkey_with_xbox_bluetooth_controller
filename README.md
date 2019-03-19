@@ -64,17 +64,17 @@ joystic_max_value: 65535
 
             # if BUTTON
             evt_pressing_btn_map = {
-                589829: 'LEFT_TOP_TRIGGER',
-                589830: 'RIGHT_TOP_TRIGGER',
-                589831: 'BACK',
-                589832: 'START',
-                589833: 'LEFT_STICK_PRESS',
-                589834: 'RIGHT_STICK_PRESS',
-                589825: 'A',
-                589826: 'B',
-                589827: 'X',
-                589828: 'Y',
-                786979: 'XBOX'
+                0x90001: 'A',
+                0x90002: 'B',
+                0x90003: 'X',
+                0x90004: 'Y',
+                0x90005: 'LEFT_TOP_TRIGGER',
+                0x90006: 'RIGHT_TOP_TRIGGER',
+                0x90007: 'BACK',
+                0x90008: 'START',
+                0x90009: 'LEFT_STICK_PRESS',
+                0x9000a: 'RIGHT_STICK_PRESS',
+                0xc0223: 'XBOX'
             }
 
             # if PAD_RIGHT_LEFT
